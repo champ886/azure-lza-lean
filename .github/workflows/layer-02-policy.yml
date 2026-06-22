@@ -1,0 +1,116 @@
+name: Layer 02 — Policy
+
+on:
+  workflow_call:
+    inputs:
+      action:
+        description: 'plan | apply | destroy'
+        required: true
+        type: string
+      env:
+        description: 'dev | prod'
+        required: true
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:       required: true
+      AZURE_TENANT_ID:       required: true
+      AZURE_SUBSCRIPTION_ID: required: true
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [plan, apply, destroy]
+        default: plan
+        required: true
+      env:
+        type: choice
+        options: [dev, prod]
+        default: dev
+        required: true
+
+# CRITICAL: id-token: write must be here AND in orchestrator
+# secrets: inherit does NOT propagate permissions
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  LAYER:  02-policy
+  TF_DIR: environments/${{ inputs.env }}/02-policy
+
+jobs:
+  terraform:
+    name: ${{ inputs.action }} / ${{ inputs.env }} / ${{ env.LAYER }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.action != 'plan' && inputs.env == 'prod' && 'prod' || '' }}
+    defaults:
+      run:
+        working-directory: ${{ env.TF_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~1.7'
+      - name: Terraform Init
+        run: terraform init -reconfigure
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Terraform Plan
+        if: inputs.action == 'plan'
+        run: terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Post Plan to PR
+        if: inputs.action == 'plan' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('${{ env.TF_DIR }}/plan.txt', 'utf8');
+            const body = plan.length > 65000 ? plan.substring(0,65000) + '\n...truncated' : plan;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner, repo: context.repo.repo,
+              body: `### [${{ inputs.env }}] ${{ env.LAYER }}\n\`\`\`hcl\n${body}\n\`\`\``
+            });
+      - name: Upload Plan
+        if: inputs.action == 'plan'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ inputs.env }}-${{ env.LAYER }}
+          path: ${{ env.TF_DIR }}/tfplan
+          retention-days: 1
+      - name: Download Plan
+        if: inputs.action == 'apply'
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ inputs.env }}-${{ env.LAYER }}
+          path: ${{ env.TF_DIR }}
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: terraform destroy -auto-approve
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
