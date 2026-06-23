@@ -3,7 +3,4 @@ variable "org_name"                { type = string }
 variable "platform_subscription_id" { type = string }
 variable "nonprod_subscription_id"  { type = string }
 variable "prod_subscription_id"     { type = string }
-variable "tags"                     { 
-                                      type = map(string)
-                                      default = {}
-                                    }
+variable "tags"                     { type = map(string); default = {} }
