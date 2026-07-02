@@ -1,15 +1,8 @@
 # environments/shared/03-management/main.tf
-data "azurerm_client_config" "current" {}
+# Deploys first — no dependency on hub state
+# management_subnet_id wired up in phase 2 after hub is deployed
 
-data "terraform_remote_state" "hub" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = var.tfstate_rg_name
-    storage_account_name = var.tfstate_sa_name
-    container_name       = var.tfstate_container
-    key                  = "alz/shared/04-hub/terraform.tfstate"
-  }
-}
+data "azurerm_client_config" "current" {}
 
 module "management" {
   source = "../../../modules/management"
@@ -21,7 +14,11 @@ module "management" {
   defender_tier            = var.defender_tier
   security_email           = var.security_email
   platform_subscription_id = var.platform_subscription_id
-  management_subnet_id     = data.terraform_remote_state.hub.outputs.management_subnet_id
+
+  # Empty on first deploy — hub subnet doesn't exist yet
+  # After hub is deployed run: terraform apply -var-file=terraform.tfvars
+  # with management_subnet_id set in terraform.tfvars to wire up LAW private endpoint
+  management_subnet_id = var.management_subnet_id
 
   tags = {
     Environment = "shared"

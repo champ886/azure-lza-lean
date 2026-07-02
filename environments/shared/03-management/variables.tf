@@ -10,3 +10,9 @@ variable "defender_tier"            { type = string }
 variable "tfstate_rg_name"         { type = string }
 variable "tfstate_sa_name"         { type = string }
 variable "tfstate_container"       { type = string }
+variable "management_subnet_id"   {
+  type        = string
+  default     = ""
+  description = "Hub management subnet ID for LAW private endpoint. Empty on first deploy — set after hub is deployed."
+}
+

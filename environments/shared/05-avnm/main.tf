@@ -39,7 +39,7 @@ locals {
 }
 
 module "avnm" {
-  source = "../../../modules/avnm"
+  source = "../../modules/avnm"
 
   org_prefix               = var.org_prefix
   location                 = var.location

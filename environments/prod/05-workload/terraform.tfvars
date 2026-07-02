@@ -10,6 +10,6 @@ aks_subnet_cidr          = "10.20.2.0/22"
 pe_subnet_cidr           = "10.20.10.0/24"
 acr_id                   = ""   # set when ACR is created
 tfstate_rg_name         = "rg-tfstate-platform"
-tfstate_sa_name         = "cctfstate"
+tfstate_sa_name         = "cctfstatealg"
 tfstate_container       = "tfstate"
 # flow_log_storage_account_id — set in local.tfvars (gitignored)

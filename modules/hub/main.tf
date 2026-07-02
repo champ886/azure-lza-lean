@@ -179,8 +179,8 @@ resource "azurerm_network_interface" "router" {
   name                          = "nic-router-${var.org_prefix}"
   location                      = var.location
   resource_group_name           = azurerm_resource_group.hub.name
-  enable_ip_forwarding          = true   # CRITICAL — must be true
-  enable_accelerated_networking = false  # not supported on B1s
+  enable_ip_forwarding          = var.enable_ip_forwarding        # CRITICAL — must be true
+  enable_accelerated_networking = var.enable_accelerated_networking  # not supported on B1s
   tags                          = var.tags
 
   ip_configuration {

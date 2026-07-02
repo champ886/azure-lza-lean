@@ -8,5 +8,5 @@ law_retention_days       = 90
 budget_amount            = 500
 defender_tier            = "Standard"
 tfstate_rg_name         = "rg-tfstate-platform"
-tfstate_sa_name         = "cctfstate"
+tfstate_sa_name         = "cctfstatealg"
 tfstate_container       = "tfstate"

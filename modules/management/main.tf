@@ -35,6 +35,7 @@ resource "azurerm_monitor_private_link_scoped_service" "law" {
 }
 
 resource "azurerm_private_endpoint" "law" {
+  count               = var.management_subnet_id != "" ? 1 : 0
   name                = "pe-law-${var.org_prefix}"
   location            = var.location
   resource_group_name = azurerm_resource_group.management.name

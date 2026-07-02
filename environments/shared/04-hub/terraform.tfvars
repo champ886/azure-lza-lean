@@ -10,7 +10,7 @@ management_subnet_cidr  = "10.2.2.0/24"
 nat_gw_subnet_cidr      = "10.2.3.0/24"
 router_vm_ip            = "10.2.1.4"
 tfstate_rg_name        = "rg-tfstate-platform"
-tfstate_sa_name        = "cctfstate"
+tfstate_sa_name         = "cctfstatealg"
 tfstate_container      = "tfstate"
 # router_ssh_public_key — set in local.tfvars (gitignored) or GitHub Secret
 # router_ssh_public_key = "ssh-ed25519 AAAA..."

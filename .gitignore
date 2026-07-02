@@ -1,0 +1,33 @@
+# ── Terraform internals — never commit ───────────────────────
+**/.terraform/
+**/.terraform.lock.hcl
+**/local.tfplan
+crash.log
+crash.*.log
+
+# ── State files — remote backend only, never local ───────────
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terraform.tfstate.lock.info
+
+# ── Local secrets — gitignored, use local.tfvars.example ─────
+# These contain SSH keys and storage account IDs
+**/local.tfvars
+
+# ── Terraform tfvars ─────────────────────────────────────────
+**/terraform.tfvars
+
+# What IS committed:
+# ✓ terraform.tfvars — all non-secret values, safe to commit
+# ✓ local.tfvars.example — template showing expected format
+
+# ── OS / editor ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+#-bootstrap 
+bootstrap.sh
