@@ -21,6 +21,7 @@ module "hub" {
   management_subnet_cidr = var.management_subnet_cidr
   nat_gw_subnet_cidr     = var.nat_gw_subnet_cidr
   router_vm_ip           = var.router_vm_ip
+  router_vm_size         = var.router_vm_size
   router_ssh_public_key  = var.router_ssh_public_key
   law_workspace_id       = data.terraform_remote_state.management.outputs.law_workspace_id
 

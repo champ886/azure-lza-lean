@@ -12,5 +12,7 @@ router_vm_ip            = "10.2.1.4"
 tfstate_rg_name        = "rg-tfstate-platform"
 tfstate_sa_name         = "cctfstatealg"
 tfstate_container      = "tfstate"
+# environments/shared/04-hub/terraform.tfvars
+router_vm_size = "Standard_D2s_v3"
 # router_ssh_public_key — set in local.tfvars (gitignored) or GitHub Secret
 # router_ssh_public_key = "ssh-ed25519 AAAA..."

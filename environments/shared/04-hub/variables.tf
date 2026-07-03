@@ -16,3 +16,7 @@ variable "router_ssh_public_key"   {
 variable "tfstate_rg_name"        { type = string }
 variable "tfstate_sa_name"        { type = string }
 variable "tfstate_container"      { type = string }
+variable "router_vm_size" {
+  type    = string
+  default = "Standard_D2s_v3"
+}

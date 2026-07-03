@@ -179,8 +179,8 @@ resource "azurerm_network_interface" "router" {
   name                          = "nic-router-${var.org_prefix}"
   location                      = var.location
   resource_group_name           = azurerm_resource_group.hub.name
-  enable_ip_forwarding          = var.enable_ip_forwarding        # CRITICAL — must be true
-  enable_accelerated_networking = var.enable_accelerated_networking  # not supported on B1s
+  ip_forwarding_enabled          = var.enable_ip_forwarding        # CRITICAL — must be true
+  accelerated_networking_enabled = var.enable_accelerated_networking  # not supported on B1s
   tags                          = var.tags
 
   ip_configuration {
@@ -195,7 +195,7 @@ resource "azurerm_linux_virtual_machine" "router" {
   name                  = "vm-router-${var.org_prefix}"
   location              = var.location
   resource_group_name   = azurerm_resource_group.hub.name
-  size                  = "Standard_B1s"
+  size                  = var.router_vm_size
   admin_username        = "routeradmin"
   tags                  = var.tags
 
@@ -215,7 +215,7 @@ resource "azurerm_linux_virtual_machine" "router" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts-gen2"
+    sku       = "22_04-lts"
     version   = "latest"
   }
 

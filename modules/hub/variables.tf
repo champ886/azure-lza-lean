@@ -65,3 +65,9 @@ variable "enable_accelerated_networking" {
   default = false   # not supported on B1s
   
 }
+
+# module variables for router VM size
+variable "router_vm_size" {
+  type    = string
+  default = "Standard_D2s_v3"
+}
