@@ -13,6 +13,7 @@ crash.*.log
 # ── Local secrets — gitignored, use local.tfvars.example ─────
 # These contain SSH keys and storage account IDs
 **/local.tfvars
+**/local.auto.tfvars
 
 # ── Terraform tfvars ─────────────────────────────────────────
 **/terraform.tfvars

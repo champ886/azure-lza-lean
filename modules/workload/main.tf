@@ -4,7 +4,14 @@
 # NO peering resources — AVNM owns them
 # NO UDR resources — AVNM routing config pushes them
 # =============================================================
-
+terraform {
+  required_providers {
+    azurerm = {
+      source                = "hashicorp/azurerm"
+      configuration_aliases = [azurerm.platform]
+    }
+  }
+}
 resource "azurerm_resource_group" "workload" {
   name     = "rg-workload-${var.environment}-${var.org_prefix}"
   location = var.location
@@ -279,28 +286,48 @@ resource "azurerm_private_dns_zone_virtual_network_link" "monitor" {
   provider              = azurerm.platform
 }
 
-# ── NSG Flow Logs ─────────────────────────────────────────────
-resource "azurerm_network_watcher_flow_log" "workload" {
-  network_watcher_name = "NetworkWatcher_${var.location}"
-  resource_group_name  = "NetworkWatcherRG"
-  name                 = "flowlog-workload-${var.environment}-${var.org_prefix}"
+# # ── Network Watcher ───────────────────────────────────────────
+# # Required for VNet flow logs — created per subscription per region
+# resource "azurerm_resource_group" "network_watcher" {
+#   name     = "NetworkWatcherRG"
+#   location = var.location
+#   tags     = var.tags
+# }
 
-  network_security_group_id = azurerm_network_security_group.workload.id
-  storage_account_id        = var.flow_log_storage_account_id
-  enabled                   = true
+# resource "azurerm_network_watcher" "main" {
+#   name                = "NetworkWatcher_${var.location}"
+#   location            = var.location
+#   resource_group_name = azurerm_resource_group.network_watcher.name
+#   tags                = var.tags
+# }
 
-  retention_policy {
-    enabled = true
-    days    = 30
-  }
+# # ── VNet Flow Logs ────────────────────────────────────────────
+# # Replaces deprecated NSG flow logs (retiring Sept 2027)
+# # Captures all traffic in the VNet including private endpoint traffic
+# # which NSG flow logs missed
+# resource "azurerm_network_watcher_flow_log" "workload" {
+#   network_watcher_name = azurerm_network_watcher.main.name
+#   resource_group_name  = azurerm_resource_group.network_watcher.name
+#   name                 = "vnetflow-${var.environment}-${var.org_prefix}"
+#   network_security_group_id = azurerm_virtual_network.spoke.id
+#   storage_account_id   = var.flow_log_storage_account_id
+#   enabled              = true
+#   version = "2"
 
-  traffic_analytics {
-    enabled               = true
-    workspace_id          = var.law_workspace_guid
-    workspace_region      = var.location
-    workspace_resource_id = var.law_workspace_id
-    interval_in_minutes   = 10
-  }
+#   retention_policy {
+#     enabled = true
+#     days    = 30
+#   }
 
-  tags = var.tags
-}
+#   traffic_analytics {
+#     enabled               = true
+#     workspace_id          = var.law_workspace_guid
+#     workspace_region      = var.location
+#     workspace_resource_id = var.law_workspace_id
+#     interval_in_minutes   = 10
+#   }
+
+#   tags = var.tags
+
+#   depends_on = [azurerm_network_watcher.main]
+# }

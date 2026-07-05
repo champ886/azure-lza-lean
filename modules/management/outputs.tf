@@ -38,3 +38,6 @@ output "dns_zone_monitor_name" {
 output "management_rg_id" {
   value = azurerm_resource_group.management.id
 }
+output "law_workspace_guid" {
+  value = azurerm_log_analytics_workspace.law.workspace_id
+}

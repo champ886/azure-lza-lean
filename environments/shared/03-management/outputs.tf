@@ -38,3 +38,6 @@ output "dns_zone_acr_name" {
 output "dns_zone_monitor_name" {
   value = module.management.dns_zone_monitor_name
 }
+output "law_workspace_guid" {
+  value = module.management.law_workspace_guid
+}
