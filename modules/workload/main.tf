@@ -286,6 +286,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "monitor" {
   provider              = azurerm.platform
 }
 
+
 # # ── Network Watcher ───────────────────────────────────────────
 # # Required for VNet flow logs — created per subscription per region
 # resource "azurerm_resource_group" "network_watcher" {

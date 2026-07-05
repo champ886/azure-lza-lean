@@ -34,3 +34,5 @@ variable "private_endpoint_network_policies_enabled" {
                                         type = bool
                                         default = true
                                         }
+
+variable "hub_router_vm_ip" { type = string }

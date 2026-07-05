@@ -39,7 +39,7 @@ locals {
 }
 
 module "avnm" {
-  source = "../../modules/avnm"
+  source = "../../../modules/avnm"
 
   org_prefix               = var.org_prefix
   location                 = var.location
@@ -47,9 +47,9 @@ module "avnm" {
   hub_vnet_id              = data.terraform_remote_state.hub.outputs.hub_vnet_id
   platform_subscription_id = var.platform_subscription_id
   nonprod_subscription_id  = var.nonprod_subscription_id
-  prod_subscription_id     = var.prod_subscription_id
+  prod_subscription_id     = var.prod_subscription_id 
   dev_spoke_vnet_ids       = [data.terraform_remote_state.dev_workload.outputs.spoke_vnet_id]
-  prod_spoke_vnet_ids      = [data.terraform_remote_state.prod_workload.outputs.spoke_vnet_id]
+  prod_spoke_vnet_ids      = [] # [data.terraform_remote_state.prod_workload.outputs.spoke_vnet_id] #empty list — prod workload not deployed yet
   nva_next_hop_ip          = local.nva_next_hop_ip
 
   tags = {
