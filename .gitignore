@@ -16,7 +16,7 @@ crash.*.log
 **/local.auto.tfvars
 
 # ── Terraform tfvars ─────────────────────────────────────────
-**/terraform.tfvars
+# **/terraform.tfvars
 
 # What IS committed:
 # ✓ terraform.tfvars — all non-secret values, safe to commit
