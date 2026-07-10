@@ -18,13 +18,13 @@ on:
         required: true
       AZURE_SUBSCRIPTION_ID:
         required: true
-  # workflow_dispatch:
-  #   inputs:
-  #     action:
-  #       type: choice
-  #       options: [plan, apply, destroy]
-  #       default: plan
-  #       required: true
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [plan, apply, destroy]
+        default: plan
+        required: true
       env:
         type: choice
         options: [dev, prod]
