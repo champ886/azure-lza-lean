@@ -6,4 +6,3 @@ variable "deny_public_ips"          { type = bool }
 variable "tfstate_rg_name"         { type = string }
 variable "tfstate_sa_name"         { type = string }
 variable "tfstate_container"       { type = string }
-variable "deny_public_ips"          { type = bool }
