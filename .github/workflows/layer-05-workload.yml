@@ -1,4 +1,4 @@
-name: Layer — Workload
+name: Layer - Workload
 
 on:
   workflow_call:

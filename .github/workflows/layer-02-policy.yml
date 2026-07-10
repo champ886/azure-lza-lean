@@ -1,4 +1,4 @@
-name: Layer — Policy
+name: Layer - Policy
 
 on:
   workflow_call:

@@ -1,4 +1,4 @@
-name: Layer — Management Groups
+name: Layer - Management Groups
 
 on:
   workflow_call:

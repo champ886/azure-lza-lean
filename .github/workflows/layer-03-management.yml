@@ -1,4 +1,4 @@
-name: Layer 03 — Management (shared)
+name: Layer 03 - Management (shared)
 
 on:
   workflow_call:
@@ -28,7 +28,7 @@ jobs:
   terraform:
     name: ${{ inputs.action }} / shared / 03-management
     runs-on: ubuntu-latest
-    # No environment gate — shared layer, no prod approval needed
+    # No environment gate - shared layer, no prod approval needed
     defaults:
       run:
         working-directory: environments/shared/03-management

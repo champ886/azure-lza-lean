@@ -1,4 +1,4 @@
-name: Layer 05 — Avnm (shared)
+name: Layer 05 - Avnm (shared)
 
 on:
   workflow_call:
@@ -28,7 +28,7 @@ jobs:
   terraform:
     name: ${{ inputs.action }} / shared / 05-avnm
     runs-on: ubuntu-latest
-    # No environment gate — shared layer, no prod approval needed
+    # No environment gate - shared layer, no prod approval needed
     defaults:
       run:
         working-directory: environments/shared/05-avnm
