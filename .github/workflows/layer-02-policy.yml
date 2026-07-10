@@ -1,4 +1,4 @@
-name: Layer 02 — Policy
+name: Layer — Policy
 
 on:
   workflow_call:
@@ -35,18 +35,15 @@ permissions:
   contents: read
   pull-requests: write
 
-env:
-  LAYER:  02-policy
-  TF_DIR: environments/${{ inputs.env }}/02-policy
-
 jobs:
   terraform:
-    name: ${{ inputs.action }} / ${{ inputs.env }} / ${{ env.LAYER }}
+    name: ${{ inputs.action }} / ${{ inputs.env }} / 02-policy
     runs-on: ubuntu-latest
+    # Gate applies on prod environment only
     environment: ${{ inputs.action != 'plan' && inputs.env == 'prod' && 'prod' || '' }}
     defaults:
       run:
-        working-directory: ${{ env.TF_DIR }}
+        working-directory: environments/${{ inputs.env }}/02-policy
     steps:
       - uses: actions/checkout@v4
       - uses: azure/login@v2
@@ -78,26 +75,26 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const plan = fs.readFileSync('${{ env.TF_DIR }}/plan.txt', 'utf8');
+            const plan = fs.readFileSync(`environments/${{ inputs.env }}/02-policy/plan.txt`, 'utf8');
             const body = plan.length > 65000 ? plan.substring(0,65000) + '\n...truncated' : plan;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner, repo: context.repo.repo,
-              body: `### [${{ inputs.env }}] ${{ env.LAYER }}\n\`\`\`hcl\n${body}\n\`\`\``
+              body: `### [${{ inputs.env }}] 02-policy\n\`\`\`hcl\n${body}\n\`\`\``
             });
       - name: Upload Plan
         if: inputs.action == 'plan'
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ inputs.env }}-${{ env.LAYER }}
-          path: ${{ env.TF_DIR }}/tfplan
+          name: tfplan-${{ inputs.env }}-02-policy
+          path: environments/${{ inputs.env }}/02-policy/tfplan
           retention-days: 1
       - name: Download Plan
         if: inputs.action == 'apply'
         uses: actions/download-artifact@v4
         with:
-          name: tfplan-${{ inputs.env }}-${{ env.LAYER }}
-          path: ${{ env.TF_DIR }}
+          name: tfplan-${{ inputs.env }}-02-policy
+          path: environments/${{ inputs.env }}/02-policy
       - name: Terraform Apply
         if: inputs.action == 'apply'
         run: terraform apply -auto-approve tfplan

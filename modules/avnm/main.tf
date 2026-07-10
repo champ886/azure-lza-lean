@@ -155,7 +155,7 @@ resource "azurerm_network_manager_deployment" "connectivity" {
 
   depends_on = [
     azurerm_network_manager_static_member.all_dev,
-    azurerm_network_manager_static_member.dev_workload,
+    azurerm_network_manager_static_member.dev_workload
   ]
 }
 resource "azurerm_network_manager_deployment" "security" {

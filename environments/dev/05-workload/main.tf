@@ -2,7 +2,6 @@
 # NO peering resources — AVNM owns peerings
 # NO UDR resources — AVNM routing config pushes default route to this spoke
 
-
 data "azurerm_client_config" "current" {}
 
 data "terraform_remote_state" "management" {
@@ -15,6 +14,16 @@ data "terraform_remote_state" "management" {
   }
 }
 
+data "terraform_remote_state" "hub" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = var.tfstate_rg_name
+    storage_account_name = var.tfstate_sa_name
+    container_name       = var.tfstate_container
+    key                  = "alz/shared/04-hub/terraform.tfstate"
+  }
+}
+
 module "workload" {
   source = "../../../modules/workload"
   
@@ -22,7 +31,7 @@ module "workload" {
     azurerm          = azurerm
     azurerm.platform = azurerm.platform
   }
-  
+
   environment          = var.environment
   org_prefix           = var.org_prefix
   location             = var.location
@@ -34,7 +43,7 @@ module "workload" {
   acr_id               = var.acr_id
 
   law_workspace_id            = data.terraform_remote_state.management.outputs.law_workspace_id
-  law_workspace_guid          = data.terraform_remote_state.management.outputs.law_workspace_guid
+  law_workspace_guid          = data.terraform_remote_state.management.outputs.law_workspace_id
   management_rg_name          = data.terraform_remote_state.management.outputs.management_rg_name
   dns_zone_blob_id            = data.terraform_remote_state.management.outputs.dns_zone_blob_id
   dns_zone_vault_id           = data.terraform_remote_state.management.outputs.dns_zone_vault_id
@@ -44,6 +53,8 @@ module "workload" {
   dns_zone_vault_name         = data.terraform_remote_state.management.outputs.dns_zone_vault_name
   dns_zone_acr_name           = data.terraform_remote_state.management.outputs.dns_zone_acr_name
   dns_zone_monitor_name       = data.terraform_remote_state.management.outputs.dns_zone_monitor_name
+  hub_router_vm_ip = data.terraform_remote_state.hub.outputs.router_vm_ip  # add this line
+
   flow_log_storage_account_id = var.flow_log_storage_account_id
 
   tags = {

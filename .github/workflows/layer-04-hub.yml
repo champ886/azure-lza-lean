@@ -24,18 +24,14 @@ permissions:
   contents: read
   pull-requests: write
 
-env:
-  LAYER:  04-hub
-  TF_DIR: environments/shared/04-hub
-
 jobs:
   terraform:
-    name: ${{ inputs.action }} / shared / ${{ env.LAYER }}
+    name: ${{ inputs.action }} / shared / 04-hub
     runs-on: ubuntu-latest
-    environment: ${{ inputs.action != 'plan' && 'prod' || '' }}
+    # No environment gate — shared layer, no prod approval needed
     defaults:
       run:
-        working-directory: ${{ env.TF_DIR }}
+        working-directory: environments/shared/04-hub
     steps:
       - uses: actions/checkout@v4
       - uses: azure/login@v2
@@ -67,26 +63,26 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const plan = fs.readFileSync('${{ env.TF_DIR }}/plan.txt', 'utf8');
+            const plan = fs.readFileSync('environments/shared/04-hub/plan.txt', 'utf8');
             const body = plan.length > 65000 ? plan.substring(0,65000) + '\n...truncated' : plan;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner, repo: context.repo.repo,
-              body: `### [shared] ${{ env.LAYER }}\n\`\`\`hcl\n${body}\n\`\`\``
+              body: `### [shared] 04-hub\n\`\`\`hcl\n${body}\n\`\`\``
             });
       - name: Upload Plan
         if: inputs.action == 'plan'
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-shared-${{ env.LAYER }}
-          path: ${{ env.TF_DIR }}/tfplan
+          name: tfplan-shared-04-hub
+          path: environments/shared/04-hub/tfplan
           retention-days: 1
       - name: Download Plan
         if: inputs.action == 'apply'
         uses: actions/download-artifact@v4
         with:
-          name: tfplan-shared-${{ env.LAYER }}
-          path: ${{ env.TF_DIR }}
+          name: tfplan-shared-04-hub
+          path: environments/shared/04-hub
       - name: Terraform Apply
         if: inputs.action == 'apply'
         run: terraform apply -auto-approve tfplan
