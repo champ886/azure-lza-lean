@@ -1,18 +1,14 @@
 name: ALZ Deploy
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'environments/**'
-      - 'modules/**'
-      - '.github/workflows/**'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'environments/**'
-      - 'modules/**'
-      - '.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'plan | apply'
+        type: choice
+        options: [plan, apply]
+        default: plan
+        required: true
 
 permissions:
   id-token: write
@@ -24,21 +20,21 @@ jobs:
   shared-03-management:
     uses: ./.github/workflows/layer-03-management.yml
     with:
-      action: ${{ github.event_name == 'pull_request' && 'plan' || 'apply' }}
+      action: ${{ inputs.action }}
     secrets: inherit
 
   shared-04-hub:
     needs: shared-03-management
     uses: ./.github/workflows/layer-04-hub.yml
     with:
-      action: ${{ github.event_name == 'pull_request' && 'plan' || 'apply' }}
+      action: ${{ inputs.action }}
     secrets: inherit
 
   dev-01-mg:
     needs: shared-04-hub
     uses: ./.github/workflows/layer-01-mg.yml
     with:
-      action: ${{ github.event_name == 'pull_request' && 'plan' || 'apply' }}
+      action: ${{ inputs.action }}
       env: dev
     secrets: inherit
 
@@ -46,7 +42,7 @@ jobs:
     needs: dev-01-mg
     uses: ./.github/workflows/layer-02-policy.yml
     with:
-      action: ${{ github.event_name == 'pull_request' && 'plan' || 'apply' }}
+      action: ${{ inputs.action }}
       env: dev
     secrets: inherit
 
@@ -54,7 +50,7 @@ jobs:
     needs: dev-02-policy
     uses: ./.github/workflows/layer-05-workload.yml
     with:
-      action: ${{ github.event_name == 'pull_request' && 'plan' || 'apply' }}
+      action: ${{ inputs.action }}
       env: dev
     secrets: inherit
 
@@ -62,11 +58,5 @@ jobs:
     needs: dev-05-workload
     uses: ./.github/workflows/layer-05-avnm.yml
     with:
-      action: ${{ github.event_name == 'pull_request' && 'plan' || 'apply' }}
+      action: ${{ inputs.action }}
     secrets: inherit
-
-  # ── Prod jobs commented out until prod workload is deployed ──
-  # prod-01-mg:
-  # prod-02-policy:
-  # prod-05-workload:
-  # shared-05-avnm-final:
