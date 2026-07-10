@@ -15,18 +15,18 @@ on:
       AZURE_CLIENT_ID:       required: true
       AZURE_TENANT_ID:       required: true
       AZURE_SUBSCRIPTION_ID: required: true
-  workflow_dispatch:
-    inputs:
-      action:
-        type: choice
-        options: [plan, apply, destroy]
-        default: plan
-        required: true
-      env:
-        type: choice
-        options: [dev, prod]
-        default: dev
-        required: true
+  # workflow_dispatch:
+  #   inputs:
+  #     action:
+  #       type: choice
+  #       options: [plan, apply, destroy]
+  #       default: plan
+  #       required: true
+  #     env:
+  #       type: choice
+  #       options: [dev, prod]
+  #       default: dev
+  #       required: true
 
 # CRITICAL: id-token: write must be here AND in orchestrator
 # secrets: inherit does NOT propagate permissions
