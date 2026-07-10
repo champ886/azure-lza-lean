@@ -240,6 +240,5 @@ resource "azurerm_monitor_diagnostic_setting" "hub_vnet" {
 
   metric {
     category = "AllMetrics"
-    enabled  = true
   }
 }
