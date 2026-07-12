@@ -26,32 +26,8 @@ jobs:
       action: destroy
     secrets: inherit
 
-  prod-05-workload:
-    needs: shared-05-avnm
-    uses: ./.github/workflows/layer-05-workload.yml
-    with:
-      action: destroy
-      env: prod
-    secrets: inherit
-
-  prod-02-policy:
-    needs: prod-05-workload
-    uses: ./.github/workflows/layer-02-policy.yml
-    with:
-      action: destroy
-      env: prod
-    secrets: inherit
-
-  prod-01-mg:
-    needs: prod-02-policy
-    uses: ./.github/workflows/layer-01-mg.yml
-    with:
-      action: destroy
-      env: prod
-    secrets: inherit
-
   dev-05-workload:
-    needs: prod-01-mg
+    needs: shared-05-avnm
     uses: ./.github/workflows/layer-05-workload.yml
     with:
       action: destroy

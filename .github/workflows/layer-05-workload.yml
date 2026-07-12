@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       action:
-        description: 'plan | apply | destroy'
+        description: 'plan-only | apply | plan-and-apply | destroy'
         required: true
         type: string
       env:
@@ -22,8 +22,8 @@ on:
     inputs:
       action:
         type: choice
-        options: [plan, apply, destroy]
-        default: plan
+        options: [plan-only, apply, plan-and-apply, destroy]
+        default: plan-and-apply
         required: true
       env:
         type: choice
@@ -32,7 +32,6 @@ on:
         required: true
 
 # CRITICAL: id-token: write must be here AND in orchestrator
-# secrets: inherit does NOT propagate permissions
 permissions:
   id-token: write
   contents: read
@@ -42,8 +41,7 @@ jobs:
   terraform:
     name: ${{ inputs.action }} / ${{ inputs.env }} / 05-workload
     runs-on: ubuntu-latest
-    # Gate applies on prod environment only
-    environment: ${{ inputs.action != 'plan' && inputs.env == 'prod' && 'prod' || '' }}
+    environment: ${{ (inputs.action == 'plan-and-apply' || inputs.action == 'apply') && inputs.env == 'prod' && 'prod' || '' }}
     defaults:
       run:
         working-directory: environments/${{ inputs.env }}/05-workload
@@ -57,6 +55,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~1.7'
+
       - name: Terraform Init
         run: terraform init -reconfigure
         env:
@@ -64,48 +63,40 @@ jobs:
           ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Terraform Plan
-        if: inputs.action == 'plan'
+        if: inputs.action == 'plan-only' || inputs.action == 'plan-and-apply' || inputs.action == 'apply'
         run: terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Post Plan to PR
-        if: inputs.action == 'plan' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync(`environments/${{ inputs.env }}/05-workload/plan.txt`, 'utf8');
-            const body = plan.length > 65000 ? plan.substring(0,65000) + '\n...truncated' : plan;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner, repo: context.repo.repo,
-              body: `### [${{ inputs.env }}] 05-workload\n\`\`\`hcl\n${body}\n\`\`\``
-            });
-      - name: Upload Plan
-        if: inputs.action == 'plan'
+
+      - name: Upload Plan Artifact
+        if: inputs.action == 'plan-only'
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ inputs.env }}-05-workload
           path: environments/${{ inputs.env }}/05-workload/tfplan
           retention-days: 1
-      - name: Download Plan
+
+      - name: Download Plan Artifact
         if: inputs.action == 'apply'
         uses: actions/download-artifact@v4
         with:
           name: tfplan-${{ inputs.env }}-05-workload
           path: environments/${{ inputs.env }}/05-workload
+
       - name: Terraform Apply
-        if: inputs.action == 'apply'
+        if: inputs.action == 'plan-and-apply' || inputs.action == 'apply'
         run: terraform apply -auto-approve tfplan
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         run: terraform destroy -auto-approve

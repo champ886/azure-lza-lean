@@ -1,10 +1,10 @@
-name: Layer 04 - Hub (shared)
+name: Layer - 04 Hub (shared)
 
 on:
   workflow_call:
     inputs:
       action:
-        description: 'plan | apply | destroy'
+        description: 'plan-only | apply | plan-and-apply | destroy'
         required: true
         type: string
     secrets:
@@ -18,13 +18,8 @@ on:
     inputs:
       action:
         type: choice
-        options: [plan, apply, destroy]
-        default: plan
-        required: true
-      env:
-        type: choice
-        options: [dev, prod]
-        default: dev
+        options: [plan-only, apply, plan-and-apply, destroy]
+        default: plan-and-apply
         required: true
 
 permissions:
@@ -36,7 +31,6 @@ jobs:
   terraform:
     name: ${{ inputs.action }} / shared / 04-hub
     runs-on: ubuntu-latest
-    # No environment gate - shared layer, no prod approval needed
     defaults:
       run:
         working-directory: environments/shared/04-hub
@@ -50,6 +44,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~1.7'
+
       - name: Terraform Init
         run: terraform init -reconfigure
         env:
@@ -57,48 +52,40 @@ jobs:
           ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Terraform Plan
-        if: inputs.action == 'plan'
+        if: inputs.action == 'plan-only' || inputs.action == 'plan-and-apply' || inputs.action == 'apply'
         run: terraform plan -out=tfplan -no-color 2>&1 | tee plan.txt
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Post Plan to PR
-        if: inputs.action == 'plan' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('environments/shared/04-hub/plan.txt', 'utf8');
-            const body = plan.length > 65000 ? plan.substring(0,65000) + '\n...truncated' : plan;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner, repo: context.repo.repo,
-              body: `### [shared] 04-hub\n\`\`\`hcl\n${body}\n\`\`\``
-            });
-      - name: Upload Plan
-        if: inputs.action == 'plan'
+
+      - name: Upload Plan Artifact
+        if: inputs.action == 'plan-only'
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-shared-04-hub
           path: environments/shared/04-hub/tfplan
           retention-days: 1
-      - name: Download Plan
+
+      - name: Download Plan Artifact
         if: inputs.action == 'apply'
         uses: actions/download-artifact@v4
         with:
           name: tfplan-shared-04-hub
           path: environments/shared/04-hub
+
       - name: Terraform Apply
-        if: inputs.action == 'apply'
+        if: inputs.action == 'plan-and-apply' || inputs.action == 'apply'
         run: terraform apply -auto-approve tfplan
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         run: terraform destroy -auto-approve
