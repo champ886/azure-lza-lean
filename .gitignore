@@ -14,6 +14,7 @@ crash.*.log
 # These contain SSH keys and storage account IDs
 **/local.tfvars
 **/local.auto.tfvars
+**/local-test.sh
 
 # ── Terraform tfvars ─────────────────────────────────────────
 # **/terraform.tfvars
