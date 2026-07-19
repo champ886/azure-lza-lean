@@ -71,3 +71,10 @@ variable "router_vm_size" {
   type    = string
   default = "Standard_D2s_v3"
 }
+
+
+variable "deploy_bastion" {
+  type        = bool
+  default     = false
+  description = "Deploy Azure Bastion into BastionSubnet. ~$140/mo — enable for testing, disable when done."
+}

@@ -242,3 +242,33 @@ resource "azurerm_monitor_diagnostic_setting" "hub_vnet" {
     category = "AllMetrics"
   }
 }
+
+# ── Azure Bastion ─────────────────────────────────────────────
+# Optional — enable via var.deploy_bastion = true
+# Disable when not needed to avoid ~$140/mo cost
+# BastionSubnet already exists — no subnet change needed
+
+resource "azurerm_public_ip" "bastion" {
+  count               = var.deploy_bastion ? 1 : 0
+  name                = "pip-bastion-${var.org_prefix}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.hub.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  tags                = var.tags
+}
+
+resource "azurerm_bastion_host" "hub" {
+  count               = var.deploy_bastion ? 1 : 0
+  name                = "bastion-hub-${var.org_prefix}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.hub.name
+  sku                 = "Basic"
+  tags                = var.tags
+
+  ip_configuration {
+    name                 = "ipconfig-bastion"
+    subnet_id            = azurerm_subnet.bastion.id
+    public_ip_address_id = azurerm_public_ip.bastion[0].id
+  }
+}

@@ -16,3 +16,9 @@ output "router_vm_ip" {
 output "nat_gw_public_ip" {
   value = module.hub.nat_gw_public_ip
 }
+output "bastion_name" {
+  value = module.hub.bastion_name
+}
+output "bastion_dns_name" {
+  value = module.hub.bastion_dns_name
+}

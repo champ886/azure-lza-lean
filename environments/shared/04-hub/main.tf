@@ -24,6 +24,7 @@ module "hub" {
   router_vm_size         = var.router_vm_size
   router_ssh_public_key  = var.router_ssh_public_key
   law_workspace_id       = data.terraform_remote_state.management.outputs.law_workspace_id
+  deploy_bastion         = var.deploy_bastion
 
   tags = {
     Environment = "shared"

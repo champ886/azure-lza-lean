@@ -16,3 +16,5 @@ tfstate_container      = "tfstate"
 router_vm_size = "Standard_D2s_v3"
 # router_ssh_public_key — set in local.tfvars (gitignored) or GitHub Secret
 # router_ssh_public_key = "ssh-ed25519 AAAA..."
+# Bastion — toggle on for VM access, off when done to save cost
+deploy_bastion = true

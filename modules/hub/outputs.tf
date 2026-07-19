@@ -7,3 +7,9 @@ output "management_subnet_id" { value = azurerm_subnet.management.id }
 output "router_vm_ip"         { value = var.router_vm_ip }
 output "nat_gw_public_ip"     { value = azurerm_public_ip.nat_gw.ip_address }
 output "hub_address_space"    { value = var.hub_address_space }
+output "bastion_name" {
+  value = var.deploy_bastion ? azurerm_bastion_host.hub[0].name : ""
+}
+output "bastion_dns_name" {
+  value = var.deploy_bastion ? azurerm_bastion_host.hub[0].dns_name : ""
+}
