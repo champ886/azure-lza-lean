@@ -65,5 +65,3 @@ module "workload" {
   }
 }
 
-output "spoke_vnet_id" { value = module.workload.spoke_vnet_id }
-output "key_vault_id"  { value = module.workload.key_vault_id }
