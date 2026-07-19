@@ -170,3 +170,23 @@ resource "azurerm_network_manager_deployment" "security" {
     azurerm_network_manager_static_member.dev_workload,
   ]
 }
+
+# Allow Bastion inbound to all spokes — sits above NSG layer
+resource "azurerm_network_manager_admin_rule" "allow_bastion_ssh" {
+  name                     = "allow-bastion-ssh"
+  admin_rule_collection_id = azurerm_network_manager_admin_rule_collection.baseline.id
+  action                   = "Allow"
+  direction                = "Inbound"
+  priority                 = 90    # lower number = higher priority — runs before deny rules
+  protocol                 = "Tcp"
+
+  source {
+    address_prefix_type = "IPPrefix"
+    address_prefix      = "10.2.0.128/26"   # BastionSubnet CIDR
+  }
+  destination {
+    address_prefix_type = "IPPrefix"
+    address_prefix      = "*"
+  }
+  destination_port_ranges = ["22", "3389"]
+}

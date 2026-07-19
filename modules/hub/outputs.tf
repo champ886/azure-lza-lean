@@ -4,6 +4,7 @@ output "hub_rg_name"          { value = azurerm_resource_group.hub.name }
 output "hub_rg_id"            { value = azurerm_resource_group.hub.id }
 output "nva_subnet_id"        { value = azurerm_subnet.nva.id }
 output "management_subnet_id" { value = azurerm_subnet.management.id }
+output "bastion_subnet_id"    { value = azurerm_subnet.bastion.id }
 output "router_vm_ip"         { value = var.router_vm_ip }
 output "nat_gw_public_ip"     { value = azurerm_public_ip.nat_gw.ip_address }
 output "hub_address_space"    { value = var.hub_address_space }

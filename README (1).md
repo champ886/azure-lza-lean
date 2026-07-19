@@ -213,5 +213,8 @@ Adding a new spoke is one `terraform apply` — drop a new VNet ID into the AVNM
 **Why shared private DNS zones?**
 8 zones created once in management, linked to every spoke. Private endpoint FQDNs resolve to private IPs from any spoke without duplication.
 
+**Why toggle Bastion on/off rather than leaving it running?**
+Basic SKU Bastion costs ~$140/mo. The BastionSubnet is pre-declared at zero cost — you only pay when the Bastion service is deployed into it. `deploy_bastion = true` for testing, `false` when done. Azure CLI native client requires Standard SKU (~$280/mo) — for a scale-up that primarily uses portal access, Basic SKU is the lean choice.
+
 **Why hub-and-spoke instead of flat VNet?**
 East-west traffic inspection, centralised egress via shared NAT GW, future VPN/ExpressRoute via GatewaySubnet, Bastion via BastionSubnet — all pre-declared at zero cost in the hub.

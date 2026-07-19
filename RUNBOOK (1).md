@@ -283,6 +283,175 @@ terraform destroy
 
 ---
 
+## Azure Bastion — VM Access
+
+Bastion provides browser-based SSH/RDP to VMs without public IPs. It lives in the hub VNet and reaches spoke VMs via AVNM peering.
+
+**Cost:** Basic SKU ~$140/mo — toggle on when needed, off when done.
+
+**Note:** Developer SKU (free) does not support VNet peering — Basic SKU minimum required for this hub-spoke architecture.
+
+### Enable Bastion
+
+In `environments/shared/04-hub/terraform.tfvars`:
+
+```hcl
+deploy_bastion = true
+```
+
+Then apply:
+
+```bash
+./local-test.sh shared/04-hub apply
+# Takes ~10 minutes to provision
+```
+
+Verify:
+
+```bash
+az network bastion show   --name bastion-hub-cc   --resource-group rg-hub-cc   --subscription "7fc27efc-58ce-41aa-b8ed-9ce148111f7b"   --query "{name:name, state:provisioningState}"   -o table
+# Wait for: Succeeded
+```
+
+---
+
+### Connect via Bastion
+
+**Option A — Portal (Basic SKU, recommended for one-off access)**
+
+```
+Portal → Virtual Machines → <vm-name> → Connect → Bastion
+```
+
+In the Bastion dropdown — **always select `bastion-hub-cc`**. The spoke option (`vnet-spoke-dev-cc-bastion`) does not exist — Azure suggests it as a potential location but it is not deployed.
+
+```
+→ Authentication Type: SSH Private Key from Local File
+→ Username: testadmin (or routeradmin for router VM)
+→ Local File: browse to private key (.ssh/azure-lza-router — NOT the .pub file)
+→ Connect
+```
+
+A browser terminal opens directly into the VM.
+
+**Option B — Azure CLI (key stays local, better for repeated access)**
+
+Requires Standard SKU Bastion. If on Basic SKU use Option A.
+
+```bash
+# One-time setup
+az extension add --name ssh
+az config set extension.use_dynamic_install=yes_without_prompt
+
+# Connect
+az network bastion ssh   --name bastion-hub-cc   --resource-group rg-hub-cc   --target-resource-id $(az vm show     --resource-group rg-workload-dev-cc     --name vm-test-dev     --subscription "6f5ab5c9-4f1c-43c2-b269-89441976bb0a"     --query id -o tsv)   --auth-type ssh-key   --username testadmin   --ssh-key ~/.ssh/azure-lza-router   --subscription "7fc27efc-58ce-41aa-b8ed-9ce148111f7b"
+```
+
+---
+
+### Validation commands inside the VM
+
+Once connected run these to validate the hub-spoke architecture:
+
+```bash
+# 1. Check default route — must show hub router VM as next hop
+ip route show default
+# Expected: default via 10.2.1.4 dev eth0
+
+# 2. Check internet egress — must match NAT GW public IP
+curl -s https://ifconfig.me
+# Expected: 20.53.251.248 (your NAT GW public IP)
+
+# 3. Check DNS — Key Vault must resolve to private IP
+nslookup kv-dev-cc.vault.azure.net
+# Expected: Address: 10.10.10.x (not a public IP)
+
+# 4. Check hub reachability via peering
+ping -c 3 10.2.1.4
+# Expected: 3 packets received
+
+# 5. Check Key Vault reachable via private endpoint
+curl -s -o /dev/null -w "%{http_code}" https://kv-dev-cc.vault.azure.net/
+# Expected: 401 (unauthorised but reachable — proves PE is working)
+```
+
+---
+
+### How Bastion traffic routes
+
+Bastion traffic does NOT go via the router VM. It matches the system route `10.2.0.0/16 → VNetPeering` created by AVNM and goes directly via the peering:
+
+```
+Browser → Bastion (10.2.0.128/26 in hub)
+              ↓ VNetPeering system route — direct, bypasses router VM
+         VM in spoke (10.10.1.x)
+```
+
+Do not add custom routes for the hub VNet CIDR (`10.2.0.0/16`) to spoke route tables — this would override the system route and break Bastion.
+
+---
+
+### NSG requirements
+
+Already configured in `modules/workload/main.tf`. The workload NSG allows SSH/RDP from `VirtualNetwork` at priority 100, before the deny-internet rule at 110:
+
+```hcl
+# Priority 100 — evaluated before deny rule
+security_rule {
+  name                       = "allow-bastion-inbound"
+  priority                   = 100
+  source_address_prefix      = "VirtualNetwork"  # covers Bastion via peering
+  destination_port_ranges    = ["22", "3389"]
+  access                     = "Allow"
+  protocol                   = "Tcp"
+}
+
+# Priority 110 — deny internet, after Bastion allow
+security_rule {
+  name                       = "deny-direct-internet-inbound"
+  priority                   = 110
+  source_address_prefix      = "Internet"
+  access                     = "Deny"
+}
+```
+
+`VirtualNetwork` is used as the source rather than the BastionSubnet CIDR because Bastion connects via private IP across the AVNM peering — the traffic is tagged as VirtualNetwork, not as the specific BastionSubnet range.
+
+---
+
+### Disable Bastion when done
+
+```bash
+# Edit environments/shared/04-hub/terraform.tfvars
+deploy_bastion = false
+
+./local-test.sh shared/04-hub apply
+# Destroys bastion-hub-cc and pip-bastion-cc
+```
+
+Verify destroyed:
+
+```bash
+az network bastion list   --subscription "7fc27efc-58ce-41aa-b8ed-9ce148111f7b"   --query "[].name" -o tsv
+# Should return empty
+```
+
+---
+
+### BastionSubnet requirements
+
+| Requirement | Value |
+|---|---|
+| Subnet name | Must be exactly `AzureBastionSubnet` — Azure enforces this |
+| Minimum size | `/26` (64 addresses) for Basic SKU |
+| Current CIDR | `10.2.0.128/26` |
+| Public IP SKU | Standard, Static — Basic SKU public IP is rejected |
+| Terraform toggle | `deploy_bastion = true/false` in hub tfvars |
+
+The subnet is pre-declared in the hub at zero cost. Only the Bastion host and its public IP incur charges when enabled.
+
+---
+
 ## Troubleshooting
 
 ### State file has no outputs

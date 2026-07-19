@@ -36,3 +36,8 @@ variable "private_endpoint_network_policies_enabled" {
                                         }
 
 variable "hub_router_vm_ip" { type = string }
+variable "bastion_subnet_cidr" {
+  type        = string
+  default     = "10.2.0.128/27"
+  description = "Hub BastionSubnet CIDR — allows Bastion traffic through workload NSG. AVNM Allow rules cannot bypass NSG so this NSG rule is required"
+}

@@ -23,7 +23,7 @@ variable "gateway_subnet_cidr" {
 
 variable "bastion_subnet_cidr" {
   type    = string
-  default = "10.2.0.128/27"
+  default = "10.2.0.128/26"   # minimum /26 for Bastion Basic SKU
 }
 
 variable "management_subnet_cidr" {

@@ -5,7 +5,7 @@ variable "platform_subscription_id"{ type = string }
 variable "hub_address_space"       { type = string }
 variable "nva_subnet_cidr"         { type = string }
 variable "gateway_subnet_cidr"     { type = string }
-variable "bastion_subnet_cidr"     { type = string }
+# variable "bastion_subnet_cidr"     { type = string }
 variable "management_subnet_cidr"  { type = string }
 variable "nat_gw_subnet_cidr"      { type = string }
 variable "router_vm_ip"            { type = string }
@@ -24,4 +24,8 @@ variable "deploy_bastion" {
   type        = bool
   default     = false
   description = "Deploy Azure Bastion into BastionSubnet. ~$140/mo — enable for testing, disable when done."
+}
+variable "bastion_subnet_cidr" {
+  type    = string
+  default = "10.2.0.128/26"   # minimum /26 for Bastion Basic SKU
 }
